@@ -1,7 +1,6 @@
 #!/usr/bin/env ts-node
 
 // TODO: split this file up, since it's starting to get large and unwieldy
-// (in its own repo)
 
 import fs from 'fs';
 import { promises as fsPromises } from 'fs';

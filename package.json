@@ -1,0 +1,56 @@
+{
+  "name": "good-morning",
+  "version": "0.0.0",
+  "description": "Manually run automated tasks in the morning",
+  "main": "lib/index.js",
+  "files": [
+    "/lib"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --watch",
+    "clean": "tsc --build --clean",
+    "prepare": "yarn build",
+    "lint": "eslint . --no-cache --ext .ts",
+    "test": "jest --no-cache && playwright test",
+    "test:debug": "node --inspect node_modules/.bin/jest --no-cache --runInBand",
+    "test:jest": "jest --no-cache",
+    "test:watch": "jest --no-cache --watch"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "packages/**/*.{js,json,ts,d.ts}": [
+      "eslint"
+    ]
+  },
+  "repository": "git@github.com:mikrostew/good-morning.git",
+  "author": "Michael Stewart <mikrostew@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/listr": "^0.14.4",
+    "@types/node": "^16.7.1",
+    "@types/which": "^2.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.29.2",
+    "@typescript-eslint/parser": "^4.29.2",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "husky": "^7.0.1",
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.5"
+  },
+  "volta": {
+    "node": "14.17.5",
+    "yarn": "1.22.11"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "execa": "^5.1.1",
+    "listr": "^0.14.3",
+    "which": "^2.0.2"
+  }
+}
