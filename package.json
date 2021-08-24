@@ -6,6 +6,7 @@
   "files": [
     "/lib"
   ],
+  "types": "lib/good-morning-tasks.d.ts",
   "scripts": {
     "build": "tsc --build",
     "build:watch": "tsc --watch",
