@@ -1,5 +1,5 @@
 {
-  "name": "good-morning",
+  "name": "@mikrostew/good-morning",
   "version": "0.0.1",
   "description": "Manually run automated tasks in the morning",
   "main": "lib/index.js",
