@@ -7,7 +7,6 @@ import path from 'path';
 import chalk from 'chalk';
 import execa from 'execa';
 import Listr, { ListrContext, ListrTask, ListrTaskResult } from 'listr';
-import which from 'which';
 
 // TODO - special task type for this? all stdout is saved I guess?
 // add things to this, to display after the tasks are run
@@ -59,14 +58,8 @@ interface HomebrewTask {
   name: string;
   type: TaskType.HOMEBREW;
   machines: MachineSpec;
-  packages: HomebrewPackage[];
-}
-
-interface HomebrewPackage {
-  // name of the package
-  name: string;
-  // name of an executable installed by the package
-  executable: string;
+  // just list of the package names
+  packages: string[];
 }
 
 interface VoltaPackageTask {
@@ -144,11 +137,15 @@ export function sleep(millis: number) {
   return new Promise((resolve) => setTimeout(resolve, millis));
 }
 
-// return if the input executable is installed or not
-async function isExecutableInstalled(executable: string): Promise<boolean> {
-  return which(executable)
-    .then(() => true)
-    .catch(() => false);
+// return if the input package is installed or not
+async function isHomebrewPackageInstalled(packageName: string): Promise<boolean> {
+  try {
+    await execa('brew', ['ls', '--versions', packageName]);
+    return true;
+  } catch {
+    // that command will return non-zero if not installed, and execa with throw
+    return false;
+  }
 }
 
 // convert process name into a task to kill that process
@@ -167,14 +164,14 @@ function killProcessToTask(processName: string): ListrTask {
 }
 
 // convert homebrew packages to list of tasks for install/upgrade
-function homebrewPackageToTask(pkg: HomebrewPackage): ListrTask {
+function homebrewPackageToTask(packageName: string): ListrTask {
   return {
-    title: `install or upgrade ${pkg.name} (${pkg.executable})`,
+    title: `install or upgrade ${packageName}`,
     task: async () => {
-      if (await isExecutableInstalled(pkg.executable)) {
-        return execa('brew', ['upgrade', pkg.name]);
+      if (await isHomebrewPackageInstalled(packageName)) {
+        return execa('brew', ['upgrade', packageName]);
       } else {
-        return execa('brew', ['install', pkg.name]);
+        return execa('brew', ['install', packageName]);
       }
     },
   };
@@ -527,7 +524,9 @@ export function configTaskToListrTask(
         task: () => {
           // convert all the configured homebrew packages to tasks
           return new Listr(
-            [mainHomebrewTask()].concat(task.packages.map((pkg) => homebrewPackageToTask(pkg))),
+            [mainHomebrewTask()].concat(
+              task.packages.map((pkgName) => homebrewPackageToTask(pkgName))
+            ),
             { exitOnError: false }
           );
         },
