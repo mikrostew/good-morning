@@ -477,7 +477,14 @@ export async function fileNameChecks(
     // open the directory in Finder to fix these
     await execa('open', [dirPath]);
     // show error summary, along with file names
-    throw new Error(`${errors.join(', ')}\n${failedFiles.join('\n')}`);
+    // (show error at end because Listr only shows the last line)
+    throw new Error(
+      [
+        'Some file names had issues',
+        failedFiles.sort().join('\n'),
+        `Error(s): ${errors.join(', ')}`,
+      ].join('\n')
+    );
   }
 }
 
