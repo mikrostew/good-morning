@@ -448,7 +448,7 @@ export async function fileNameChecks(
     },
   ];
 
-  const failedFiles: string[] = [];
+  const failedFiles: Record<string, boolean> = {};
   const errors = fileChecks
     .map((check: FileCheck) => {
       let matchingFiles;
@@ -465,8 +465,10 @@ export async function fileNameChecks(
       }
 
       if (matchingFiles.length > 0) {
-        // add matching files to array
-        failedFiles.push(...matchingFiles);
+        // add matching files to set
+        for (const fileName of matchingFiles) {
+          failedFiles[fileName] = true;
+        }
         return check.errorMsg.replace('{}', `${matchingFiles.length}`);
       }
     })
@@ -481,7 +483,7 @@ export async function fileNameChecks(
     throw new Error(
       [
         'Some file names had issues',
-        failedFiles.sort().join('\n'),
+        Object.keys(failedFiles).sort().join('\n'),
         `Error(s): ${errors.join(', ')}`,
       ].join('\n')
     );
