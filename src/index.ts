@@ -12,6 +12,8 @@ import Listr, { ListrContext, ListrTask, ListrTaskResult } from 'listr';
 // add things to this, to display after the tasks are run
 //const FINAL_OUTPUT: string[] = [];
 
+// TODO: test all this shit
+
 export enum TaskType {
   KILL_PROC = 'kill-proc',
   HOMEBREW = 'homebrew',
@@ -138,14 +140,11 @@ export function sleep(millis: number) {
 }
 
 // return if the input package is installed or not
-async function isHomebrewPackageInstalled(packageName: string): Promise<boolean> {
-  try {
-    await execa('brew', ['ls', '--versions', packageName]);
-    return true;
-  } catch {
-    // that command will return non-zero if not installed, and execa with throw
-    return false;
-  }
+function isHomebrewPackageInstalled(packageName: string): Promise<boolean> {
+  // that command will return non-zero if not installed, and execa will reject
+  return execa('brew', ['ls', '--versions', packageName])
+    .then(() => true)
+    .catch(() => false);
 }
 
 // convert process name into a task to kill that process
@@ -153,12 +152,8 @@ function killProcessToTask(processName: string): ListrTask {
   return {
     title: `kill process '${processName}'`,
     task: async () => {
-      try {
-        await execa('pkill', [processName]);
-      } catch (err) {
-        // probably the process doesn't exist, that's fine
-        return true;
-      }
+      // if the process doesn't exist, that's fine
+      return execa('pkill', [processName]).catch(() => true);
     },
   };
 }
@@ -237,24 +232,25 @@ async function repoTask(directory: string, options: RepoOptions[]): Promise<void
   }
 }
 
-// is the default branch main or master?
+// is the default branch 'main' or 'master'?
 async function getRepoDefaultBranch(directory: string): Promise<string> {
-  // check if repo uses main or master
-  try {
-    await execa('git', ['show-ref', '--verify', '--quiet', 'refs/heads/main'], { cwd: directory });
-    return 'main';
-  } catch {
-    // not main
+  const refsToCheck = [
+    'refs/heads/main',
+    'refs/heads/master',
+    'refs/remotes/origin/main',
+    'refs/remotes/origin/master',
+  ];
+
+  for (const ref of refsToCheck) {
+    try {
+      await execa('git', ['show-ref', '--verify', '--quiet', ref], { cwd: directory });
+      const branchName = path.basename(ref);
+      return branchName;
+    } catch {
+      // if that fails, it's ok, try the next one
+    }
   }
-  try {
-    await execa('git', ['show-ref', '--verify', '--quiet', 'refs/heads/master'], {
-      cwd: directory,
-    });
-    return 'master';
-  } catch {
-    // not master either
-  }
-  throw new Error("default branch is not 'main' or 'master'");
+  throw new Error(`Error: ${directory} default branch is not 'main' or 'master'`);
 }
 
 async function currentGitBranch(directory: string): Promise<string> {
