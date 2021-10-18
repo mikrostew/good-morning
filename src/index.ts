@@ -127,7 +127,8 @@ interface OpenUrlTask {
   type: TaskType.OPEN_URL;
   machines: MachineSpec;
   url_config: {
-    [description: string]: [url: string];
+    // map description to the URL
+    [description: string]: string;
   };
 }
 
@@ -611,7 +612,7 @@ export function configTaskToListrTask(
             Object.keys(task.url_config).map((description: string) => {
               return {
                 title: description,
-                task: () => execa('open', task.url_config[description]),
+                task: () => execa('open', [task.url_config[description]!]),
               };
             }),
             { exitOnError: false }
