@@ -23,6 +23,7 @@ export enum TaskType {
   GROUP = 'group',
   FUNCTION = 'function',
   REPO_UPDATE = 'repo-update',
+  OPEN_URL = 'open-url',
 }
 
 export interface Config {
@@ -47,7 +48,8 @@ type ConfigTask =
   | ExecAndSaveTask
   | TaskGroup
   | FunctionTask
-  | RepoUpdateTask;
+  | RepoUpdateTask
+  | OpenUrlTask;
 
 interface KillProcessTask {
   name: string;
@@ -118,6 +120,16 @@ interface RepoUpdateTask {
 }
 
 type RepoOptions = 'pull&rebase' | 'push' | 'yarn';
+
+// open a URL
+interface OpenUrlTask {
+  name: string;
+  type: TaskType.OPEN_URL;
+  machines: MachineSpec;
+  url_config: {
+    [description: string]: [url: string];
+  };
+}
 
 // machine names map to the keys of this object
 // (so that adding a task is easy, because it's done often,
@@ -588,6 +600,23 @@ export function configTaskToListrTask(
         title: task.name,
         enabled: () => shouldRunForMachine(task, machineConfig, currentMachine),
         task: () => repoTask(task.directory, task.options),
+      };
+    case TaskType.OPEN_URL:
+      return {
+        title: task.name,
+        enabled: () => shouldRunForMachine(task, machineConfig, currentMachine),
+        task: () => {
+          return new Listr(
+            // convert all configured URLs to separate sub-tasks
+            Object.keys(task.url_config).map((description: string) => {
+              return {
+                title: description,
+                task: () => execa('open', task.url_config[description]),
+              };
+            }),
+            { exitOnError: false }
+          );
+        },
       };
   }
 }
