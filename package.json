@@ -1,6 +1,6 @@
 {
   "name": "@mikrostew/good-morning",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Manually run automated tasks in the morning",
   "main": "lib/index.js",
   "files": [
