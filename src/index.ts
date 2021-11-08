@@ -1,5 +1,6 @@
 #!/usr/bin/env ts-node
 
+import { spawn } from 'child_process';
 import { promises as fsPromises } from 'fs';
 import os from 'os';
 import path from 'path';
@@ -16,6 +17,7 @@ import Listr, { ListrContext, ListrTask, ListrTaskResult } from 'listr';
 
 export enum TaskType {
   KILL_PROC = 'kill-proc',
+  START_APP = 'start-app',
   HOMEBREW = 'homebrew',
   VOLTA_PACKAGE = 'volta-package',
   EXEC = 'exec',
@@ -42,6 +44,7 @@ type MachineSpec = string[] | 'inherit';
 
 type ConfigTask =
   | KillProcessTask
+  | StartAppTask
   | HomebrewTask
   | VoltaPackageTask
   | ExecTask
@@ -56,6 +59,13 @@ interface KillProcessTask {
   type: TaskType.KILL_PROC;
   machines: MachineSpec;
   processes: string[];
+}
+
+interface StartAppTask {
+  name: string;
+  type: TaskType.START_APP;
+  machines: MachineSpec;
+  appPaths: string[];
 }
 
 interface HomebrewTask {
@@ -167,6 +177,20 @@ function killProcessToTask(processName: string): ListrTask {
     task: async () => {
       // if the process doesn't exist, that's fine
       return execa('pkill', [processName]).catch(() => true);
+    },
+  };
+}
+
+// convert app path into a task to start the app
+function startAppToTask(appPath: string): ListrTask {
+  return {
+    title: `start '${appPath}'`,
+    task: async () => {
+      // spawn a detached child job for this
+      // https://nodejs.org/api/child_process.html#optionsdetached
+      const subprocess = spawn(appPath, { detached: true, stdio: 'ignore' });
+      subprocess.unref();
+      // not checking if the app is running, just assuming it will be fine
     },
   };
 }
@@ -531,6 +555,18 @@ export function configTaskToListrTask(
           // convert all the process names to tasks
           return new Listr(
             task.processes.map((processName) => killProcessToTask(processName)),
+            { exitOnError: false }
+          );
+        },
+      };
+    case TaskType.START_APP:
+      return {
+        title: task.name,
+        enabled: () => shouldRunForMachine(task, machineConfig, currentMachine),
+        task: () => {
+          // convert all the app paths to tasks
+          return new Listr(
+            task.appPaths.map((appPath) => startAppToTask(appPath)),
             { exitOnError: false }
           );
         },
