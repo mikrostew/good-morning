@@ -692,7 +692,8 @@ export function runTasks(config: Config): Promise<void> {
       // reprint the errors
       for (let i = 0; i < err.errors.length; i++) {
         console.log(`Error #${i + 1}`);
-        console.log(err.errors[i]);
+        // only print the error message, not the stack trace
+        console.log(err.errors[i].message);
         console.log();
       }
     });
