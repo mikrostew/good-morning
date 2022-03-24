@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import { promises as fsPromises } from 'fs';
 import os from 'os';
 import path from 'path';
+import tempy from 'tempy';
 
 import chalk from 'chalk';
 import execa from 'execa';
@@ -327,11 +328,12 @@ async function gitPullRebase(directory: string, branch: string): Promise<void> {
     await execa('git', ['rebase', `origin/${branch}`], { cwd: directory });
   } catch (err) {
     // short message is not helpful (just shows command failed), but stderr has useful info
-    const msg = err.stderr
-      .split('\n')
-      .map((s: string) => s.trim())
-      .join(' ');
-    throw new Error(`Error pulling and rebasing branch ${branch}: ${msg}`);
+    // show the last line, and put the rest in a file
+    const stderrLines = err.stderr.split('\n');
+    const lastLine = stderrLines[stderrLines.length - 1];
+    const errorFile = tempy.file({extension: 'log'});
+    await fsPromises.writeFile(errorFile, `stdout:\n${err.stdout}\n\nstderr:\n${err.stderr}`, 'utf8');
+    throw new Error(`Repo ${directory}\n(Full error message saved to ${errorFile})\nError pulling and rebasing branch ${branch}: ${lastLine}`);
   }
 }
 
