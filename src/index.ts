@@ -16,6 +16,8 @@ import Listr, { ListrContext, ListrTask, ListrTaskResult } from 'listr';
 
 // TODO: test all this shit
 
+// TODO: move all these types into ./types.ts
+
 export enum TaskType {
   KILL_PROC = 'kill-proc',
   START_APP = 'start-app',
@@ -41,9 +43,9 @@ export interface Config {
 }
 
 // specify a list of machine names, or inherit from parent task
-type MachineSpec = string[] | 'inherit';
+export type MachineSpec = string[] | 'inherit';
 
-type ConfigTask =
+export type ConfigTask =
   | KillProcessTask
   | StartAppTask
   | HomebrewTask
@@ -83,7 +85,7 @@ interface VoltaPackageTask {
   packages: VoltaPackage[];
 }
 
-interface VoltaPackage {
+export interface VoltaPackage {
   name: string;
 }
 
@@ -113,12 +115,14 @@ interface TaskGroup {
   tasks: ConfigTask[];
 }
 
+export type ListrFunction = (ctx?: ListrContext) => void | ListrTaskResult<any>;
+
 // run a JS function
 interface FunctionTask {
   name: string;
   type: TaskType.FUNCTION;
   machines: MachineSpec;
-  function: (ctx?: ListrContext) => void | ListrTaskResult<any>;
+  function: ListrFunction;
 }
 
 // update a repository
@@ -130,7 +134,7 @@ interface RepoUpdateTask {
   options: RepoOptions[];
 }
 
-type RepoOptions = 'pull&rebase' | 'push' | 'yarn';
+export type RepoOptions = 'pull&rebase' | 'push' | 'yarn';
 
 // open a URL
 interface OpenUrlTask {
