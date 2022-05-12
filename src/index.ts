@@ -95,6 +95,7 @@ interface ExecTask {
   machines: MachineSpec;
   command: string;
   args: string[];
+  options: Record<string, unknown>;
 }
 
 // exec a command and save the output in the configured variable in the context
@@ -608,7 +609,7 @@ export function configTaskToListrTask(
         title: task.name,
         enabled: () => shouldRunForMachine(task, machineConfig, currentMachine),
         // just execa the info from the config
-        task: () => execa(task.command, task.args),
+        task: () => execa(task.command, task.args, task.options),
       };
     case TaskType.EXEC_AND_SAVE:
       return {

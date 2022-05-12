@@ -2,13 +2,14 @@ import { TaskType, MachineSpec, ListrFunction, ConfigTask, VoltaPackage, RepoOpt
 
 // things to make the config a little cleaner
 
-export function exec(name: string, machines: MachineSpec, command: string, args: string[]): ConfigTask {
+export function exec(name: string, machines: MachineSpec, command: string, args: string[], options: Record<string, unknown> | undefined): ConfigTask {
   return {
     name,
     type: TaskType.EXEC,
     machines,
     command,
     args,
+    options: options || {},
   };
 }
 

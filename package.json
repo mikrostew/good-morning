@@ -13,7 +13,7 @@
     "clean": "tsc --build --clean",
     "prepare": "yarn build",
     "lint": "eslint . --no-cache --ext .ts",
-    "test": "jest --no-cache && playwright test",
+    "test": "jest --no-cache",
     "test:debug": "node --inspect node_modules/.bin/jest --no-cache --runInBand",
     "test:jest": "jest --no-cache",
     "test:watch": "jest --no-cache --watch"
